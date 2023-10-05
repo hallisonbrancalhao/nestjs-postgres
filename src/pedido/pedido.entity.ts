@@ -3,12 +3,11 @@ import { UsuarioEntity } from '../usuario/usuario.entity';
 import {
   Entity,
   Column,
-  CreateDateColumn,
-  UpdateDateColumn,
-  DeleteDateColumn,
   PrimaryGeneratedColumn,
   ManyToOne,
+  OneToMany,
 } from 'typeorm';
+import { ItemPedidoEntity } from './item-pedido.entity';
 
 @Entity({ name: 'pedido' })
 export class PedidoEntity {
@@ -24,12 +23,8 @@ export class PedidoEntity {
   @ManyToOne(() => UsuarioEntity, (usuario) => usuario.pedidos)
   usuario: UsuarioEntity;
 
-  @CreateDateColumn({ name: 'created_at' })
-  createdAt: string;
-
-  @UpdateDateColumn({ name: 'updated_at' })
-  updatedAt: string;
-
-  @DeleteDateColumn({ name: 'deleted_at' })
-  deletedAt: string;
+  @OneToMany(() => ItemPedidoEntity, (itemPedido) => itemPedido.pedido, {
+    cascade: true,
+  })
+  itensPedido: ItemPedidoEntity[];
 }
