@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { PedidoEntity } from './pedido.entity';
 import { In, Repository } from 'typeorm';
@@ -20,8 +20,15 @@ export class PedidoService {
     private produtoRepository: Repository<ProdutoEntity>,
   ) {}
 
+  private async buscaUsuario(id: string) {
+    const usuario = await this.usuarioRepository.findOneBy({ id });
+    if (!usuario) {
+      throw new NotFoundException('Usuário não encontrado');
+    }
+    return usuario;
+  }
   async createPedido(usuarioId: string, dadosDoPedido: CreatePedidoDTO) {
-    const usuario = await this.usuarioRepository.findOneBy({ id: usuarioId });
+    const usuario = await this.buscaUsuario(usuarioId);
     const produtosIds = dadosDoPedido.itensPedido.map(
       (itemPedido) => itemPedido.produtoId,
     );
@@ -39,6 +46,9 @@ export class PedidoService {
       const produtoRelacionado = produtosRelacionados.find(
         (produto) => produto.id === itemPedido.produtoId,
       );
+
+      if (produtoRelacionado === undefined)
+        throw new NotFoundException('Produto não encontrado');
 
       const itemPedidoEntity = new ItemPedidoEntity();
       itemPedidoEntity.produto = produtoRelacionado;
@@ -72,6 +82,10 @@ export class PedidoService {
 
   async atualizaPedido(id: string, dto: UpdatePedidoDTO) {
     const pedido = await this.pedidoRepository.findOneBy({ id });
+
+    if (!pedido) {
+      throw new NotFoundException('Pedido não encontrado');
+    }
 
     Object.assign(pedido, dto);
 
