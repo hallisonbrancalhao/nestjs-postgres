@@ -27,6 +27,20 @@ export class PedidoService {
     }
     return usuario;
   }
+
+  private trataDadosDoPedido(
+    dadosDoPedido: CreatePedidoDTO,
+    produtosRelacionados: ProdutoEntity[],
+  ) {
+    dadosDoPedido.itensPedido.forEach((itemPedido) => {
+      const produtoRelacionado = produtosRelacionados.find(
+        (produto) => produto.id === itemPedido.produtoId,
+      );
+
+      if (produtoRelacionado === undefined)
+        throw new NotFoundException('Produto não encontrado');
+    });
+  }
   async createPedido(usuarioId: string, dadosDoPedido: CreatePedidoDTO) {
     const usuario = await this.buscaUsuario(usuarioId);
     const produtosIds = dadosDoPedido.itensPedido.map(
@@ -36,6 +50,8 @@ export class PedidoService {
     const produtosRelacionados = await this.produtoRepository.findBy({
       id: In(produtosIds),
     });
+
+    this.trataDadosDoPedido(dadosDoPedido, produtosRelacionados);
 
     const pedido = new PedidoEntity();
 
